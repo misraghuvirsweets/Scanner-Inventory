@@ -525,81 +525,128 @@ function doSearch() {
 }
 
 async function doSearchCode(barcode) {
+  barcode = String(barcode).trim();
+  if (!barcode) return;
+
+  dbg('=== SEARCH: "' + barcode + '" ===');
+
+  // UI update — barcode dikhao
   document.getElementById('disp-bc').textContent = barcode;
   document.getElementById('inp-bc').value = barcode;
   setLB('🔍', 'Master Sheet check kar raha hoon…', 'neutral', '');
-  setBusy(true);
 
   // ── 1. Master Sheet ──────────────────────────────
   if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-    dbg('⚠ GAS_URL set nahi hai — Master check skip');
+    dbg('⚠ GAS_URL set nahi — Master skip');
     setLB('⚠️','GAS URL set nahi — sirf online search hoga','warn','NO GAS');
   } else {
-    dbg('Master lookup start: barcode=' + barcode);
+    dbg('Master lookup start: "' + barcode + '"');
     try {
       const r = await gasGet({ action:'lookupBarcode', barcode: barcode });
-      dbg('Master response: ' + JSON.stringify(r).substring(0,150));
+      dbg('Master response: ' + JSON.stringify(r).substring(0,200));
+
       if (r && r.found === true) {
-        fillForm(r.productName||'', r.productCategory||'', r.vendorName||'');
-        setLB('✅', `Master Sheet mein mila: "${r.productName||barcode}"`, 'ok', 'MASTER');
-        isNew = false; setBusy(false);
-        toast(`✅ "${r.productName}" — Master Sheet se!`, 'success');
+        // ✅ FOUND — directly fill karo
+        const name = r.productName     || '';
+        const cat  = r.productCategory || '';
+        const vend = r.vendorName      || '';
+
+        dbg('Found! name="' + name + '" cat="' + cat + '" vendor="' + vend + '"');
+
+        document.getElementById('f-name').value = name;
+        document.getElementById('f-cat').value  = cat;
+
+        // Vendor dropdown match
+        if (vend) {
+          const sel = document.getElementById('f-vendor');
+          for (const o of sel.options) {
+            if (o.value.toLowerCase().includes(vend.toLowerCase())) {
+              sel.value = o.value; break;
+            }
+          }
+        }
+
+        // Opacity reset — form fields visible karo
+        ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id => {
+          document.getElementById(id).style.opacity = '1';
+        });
+
+        calcAmt();
+        setLB('✅', '✅ Master Sheet mein mila: ' + name, 'ok', 'MASTER');
+        isNew = false;
+        toast('✅ ' + name + ' — Master Sheet se autofill!', 'success');
         return;
+
       } else {
-        dbg('Master: barcode not found (found=' + r?.found + ')');
+        dbg('Not found in Master. found=' + (r && r.found) + (r && r.error ? ' err='+r.error : ''));
       }
     } catch(e) {
       dbg('Master FAIL: ' + e.message);
-      setLB('❌','Master Sheet error: ' + e.message,'warn','GAS ERR');
+      setLB('❌', 'Master error: ' + e.message, 'warn', 'GAS ERR');
     }
   }
 
   // ── 2. Open Food Facts ───────────────────────────
   setLB('📡','Open Food Facts search kar raha hoon…','warn','');
+  dbg('Trying Open Food Facts…');
   try {
     const r = await fetch(
       `https://world.openfoodfacts.org/api/v2/product/${barcode}?fields=product_name,product_name_en,categories_tags,brands`,
       { signal: AbortSignal.timeout(7000) }
     );
     const d = await r.json();
+    dbg('OFacts status=' + d.status);
     if (d.status === 1 && d.product) {
       const p    = d.product;
       const name = p.product_name || p.product_name_en || p.brands || '';
       const cat  = cleanTag(p.categories_tags);
       if (name) {
-        fillForm(name, cat, '');
-        setLB('✅', `Open Food Facts: "${name}"`, 'ok', 'OFacts');
-        isNew = true; setBusy(false);
-        toast(`"${name}" — online database se!`, 'success');
+        document.getElementById('f-name').value = name;
+        document.getElementById('f-cat').value  = cat;
+        ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
+          document.getElementById(id).style.opacity = '1');
+        calcAmt();
+        setLB('✅', 'Open Food Facts: ' + name, 'ok', 'OFacts');
+        isNew = true;
+        toast('📡 "' + name + '" — online se fetch!', 'success');
         return;
       }
     }
-  } catch(e) { console.warn('OFacts:', e.message); }
+  } catch(e) { dbg('OFacts fail: ' + e.message); }
 
   // ── 3. UPC Item DB ───────────────────────────────
   setLB('🔄','UPC Item DB check kar raha hoon…','warn','');
+  dbg('Trying UPC Item DB…');
   try {
     const r = await fetch(
       `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`,
       { signal: AbortSignal.timeout(5000) }
     );
     const d = await r.json();
+    dbg('UPC DB code=' + d.code);
     if (d.code === 'OK' && d.items?.length) {
       const item = d.items[0];
       if (item.title) {
-        fillForm(item.title, item.category||'', item.brand||'');
-        setLB('✅', `UPC DB: "${item.title}"`, 'ok', 'UPC-DB');
-        isNew = true; setBusy(false);
-        toast(`"${item.title}" — UPC database se!`, 'success');
+        document.getElementById('f-name').value = item.title;
+        document.getElementById('f-cat').value  = item.category || '';
+        ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
+          document.getElementById(id).style.opacity = '1');
+        calcAmt();
+        setLB('✅', 'UPC DB: ' + item.title, 'ok', 'UPC-DB');
+        isNew = true;
+        toast('🔄 "' + item.title + '" — UPC database se!', 'success');
         return;
       }
     }
-  } catch(e) { console.warn('UPC DB:', e.message); }
+  } catch(e) { dbg('UPC DB fail: ' + e.message); }
 
-  // ── Not found ────────────────────────────────────
-  setLB('⚠️','Koi database mein nahi mila — manually bharo','warn','NEW');
-  isNew = true; setBusy(false);
-  toast('Product nahi mila — naam khud likho','warn');
+  // ── Kuch nahi mila ────────────────────────────────
+  dbg('Nothing found for: ' + barcode);
+  ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
+    document.getElementById(id).style.opacity = '1');
+  setLB('⚠️', 'Koi database mein nahi mila — manually bharo', 'warn', 'NEW');
+  isNew = true;
+  toast('⚠ Barcode nahi mila — naam khud likho', 'warn');
   document.getElementById('f-name').focus();
 }
 
