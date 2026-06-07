@@ -1,0 +1,996 @@
+// https://script.google.com/macros/s/AKfycbysiyDFPl9L2a2UZEksl-Ej2frJlwvK1C6kHeRKDqfCqqp8ICmkVafks3krTie_soW2/exec //
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ShopOS · Outlet Manager</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d0d14;--surface:#1a1a28;--card:#1e1e30;--border:#2a2a42;
+  --accent:#c6f135;--accent-dk:#a8ce1a;
+  --text:#e8e8f0;--muted:#8888aa;
+  --danger:#ff5569;--warn:#ffaa33;--success:#33ddaa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(198,241,53,.07) 0%,transparent 70%);}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--surface)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.tab-btn{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+  padding:.5rem 1.1rem;border-radius:6px;cursor:pointer;border:1px solid transparent;color:var(--muted);background:transparent;transition:all .2s;}
+.tab-btn.active{background:var(--accent);color:#0d0d14;font-weight:700;box-shadow:0 0 16px rgba(198,241,53,.2);}
+.tab-btn:not(.active):hover{border-color:var(--border);color:var(--text);}
+.tab-panel{display:none;}.tab-panel.active{display:block;animation:fadeUp .25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.3rem;}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:.6rem .9rem;font-size:.9rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(198,241,53,.1);}
+.inp::placeholder{color:var(--muted);}
+select.inp option{background:var(--card);}
+.lbl{display:block;font-family:'Space Mono',monospace;font-size:.67rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.3rem;}
+.btn{display:inline-flex;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;font-size:.7rem;
+  letter-spacing:.07em;text-transform:uppercase;padding:.58rem 1.2rem;border-radius:8px;cursor:pointer;border:none;transition:all .2s;font-weight:700;}
+.btn-volt{background:var(--accent);color:#0d0d14;box-shadow:0 0 12px rgba(198,241,53,.15);}
+.btn-volt:hover{background:var(--accent-dk);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-success{background:var(--success);color:#0d0d14;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.toggle-group{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.toggle-group button{flex:1;padding:.55rem;font-family:'Space Mono',monospace;font-size:.68rem;
+  letter-spacing:.06em;text-transform:uppercase;background:transparent;color:var(--muted);cursor:pointer;border:none;transition:all .2s;}
+.toggle-group button.sel-in{background:var(--success);color:#0d0d14;font-weight:700;}
+.toggle-group button.sel-out{background:var(--danger);color:#fff;font-weight:700;}
+.badge{display:inline-flex;align-items:center;gap:.3rem;font-family:'Space Mono',monospace;font-size:.63rem;
+  padding:.2rem .5rem;border-radius:100px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+.b-ok{background:rgba(51,221,170,.12);color:var(--success);border:1px solid rgba(51,221,170,.25);}
+.b-warn{background:rgba(255,170,51,.12);color:var(--warn);border:1px solid rgba(255,170,51,.25);}
+.b-danger{background:rgba(255,85,105,.12);color:var(--danger);border:1px solid rgba(255,85,105,.25);}
+.b-neutral{background:rgba(136,136,170,.1);color:var(--muted);border:1px solid rgba(136,136,170,.2);}
+
+/* Camera */
+#cam-box{position:relative;width:100%;background:#000;border-radius:10px;overflow:hidden;
+  border:2px solid var(--border);aspect-ratio:4/3;max-height:250px;}
+#cam-video{width:100%;height:100%;object-fit:cover;display:none;}
+#cam-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;background:#0d0d14;color:var(--muted);gap:.6rem;}
+#scan-overlay{position:absolute;inset:0;display:none;pointer-events:none;}
+.sc{position:absolute;width:45px;height:45px;border-color:var(--accent);border-style:solid;border-width:0;}
+.sc.tl{top:10px;left:10px;border-top-width:3px;border-left-width:3px;border-top-left-radius:4px;}
+.sc.tr{top:10px;right:10px;border-top-width:3px;border-right-width:3px;border-top-right-radius:4px;}
+.sc.bl{bottom:10px;left:10px;border-bottom-width:3px;border-left-width:3px;border-bottom-left-radius:4px;}
+.sc.br{bottom:10px;right:10px;border-bottom-width:3px;border-right-width:3px;border-bottom-right-radius:4px;}
+@keyframes sl{0%,100%{top:18%}50%{top:76%}}
+.sline{position:absolute;left:8%;right:8%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  animation:sl 1.8s ease-in-out infinite;box-shadow:0 0 8px var(--accent);}
+#cam-flash{position:absolute;inset:0;background:rgba(198,241,53,.3);opacity:0;border-radius:8px;pointer-events:none;transition:opacity .1s;}
+
+.dtable{width:100%;border-collapse:collapse;font-size:.77rem;}
+.dtable th{background:var(--surface);color:var(--muted);font-family:'Space Mono',monospace;font-size:.6rem;
+  letter-spacing:.07em;text-transform:uppercase;padding:.5rem .7rem;text-align:left;border-bottom:1px solid var(--border);}
+.dtable td{padding:.48rem .7rem;border-bottom:1px solid rgba(42,42,66,.4);}
+.dtable tr:last-child td{border-bottom:none;}
+.dtable tr:hover td{background:rgba(42,42,66,.3);}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;}
+.sv{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--accent);line-height:1;}
+.sl2{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:.2rem;}
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:2.2rem 1.5rem;text-align:center;cursor:pointer;transition:all .2s;}
+.drop-zone.over{border-color:var(--accent);background:rgba(198,241,53,.04);}
+#toast{position:fixed;bottom:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.4rem;pointer-events:none;}
+.ti{display:flex;align-items:center;gap:.5rem;background:var(--card);border:1px solid var(--border);border-radius:9px;
+  padding:.65rem .9rem;font-size:.8rem;max-width:290px;box-shadow:0 6px 20px rgba(0,0,0,.5);animation:tIn .25s ease;pointer-events:all;}
+@keyframes tIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader{width:15px;height:15px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0;}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;}
+@keyframes pd{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.75)}}
+.pulse-dot{animation:pd 1.4s ease infinite;}
+.gh{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;}
+@media(max-width:740px){.gh{grid-template-columns:1fr!important;}.g3{grid-template-columns:1fr 1fr!important;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="background:rgba(13,13,20,.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;">
+  <div style="max-width:960px;margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+    <div style="display:flex;align-items:center;gap:.65rem;">
+      <div style="width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d0d14" stroke-width="2.5">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:.8rem;font-weight:700;">ShopOS</div>
+        <div style="font-size:.65rem;color:var(--muted);">Outlet Manager</div>
+      </div>
+    </div>
+    <nav style="display:flex;gap:.4rem;">
+      <button class="tab-btn active" onclick="switchTab('inventory',this)">📦 Inventory</button>
+      <button class="tab-btn" onclick="switchTab('sales',this)">📊 Sales</button>
+    </nav>
+    <div id="conn-badge" class="badge b-neutral" style="white-space:nowrap;cursor:pointer;" onclick="toggleDebug()">
+      <span class="loader" style="width:8px;height:8px;border-width:1.5px;"></span>&nbsp;Connecting
+    </div>
+  </div>
+</header>
+
+<main style="max-width:960px;margin:0 auto;padding:1.1rem 1rem 3rem;">
+
+<!-- ======= INVENTORY TAB ======= -->
+<div id="tab-inventory" class="tab-panel active">
+  <div class="gh" style="align-items:start;">
+
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:.9rem;">
+
+      <!-- Camera Scanner -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;">
+          <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">📷 Camera Scanner</span>
+          <span id="scan-status" class="badge b-neutral">Idle</span>
+        </div>
+        <div id="cam-box">
+          <div id="cam-placeholder">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+              <rect x="3" y="7" width="3" height="10" rx="1"/><rect x="8" y="5" width="1" height="14" rx=".5"/>
+              <rect x="11" y="7" width="2" height="10" rx=".5"/><rect x="15" y="5" width="1" height="14" rx=".5"/>
+              <rect x="18" y="7" width="3" height="10" rx="1"/>
+            </svg>
+            <span style="font-size:.72rem;font-family:'Space Mono',monospace;">Camera Off</span>
+          </div>
+          <video id="cam-video" autoplay playsinline muted></video>
+          <canvas id="cam-canvas" style="display:none;"></canvas>
+          <div id="scan-overlay">
+            <div class="sc tl"></div><div class="sc tr"></div>
+            <div class="sc bl"></div><div class="sc br"></div>
+            <div class="sline"></div>
+          </div>
+          <div id="cam-flash"></div>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:.7rem;">
+          <button class="btn btn-volt" style="flex:1;justify-content:center;" onclick="startCam()">▶ Start Camera</button>
+          <button class="btn btn-ghost" onclick="stopCam()">■ Stop</button>
+        </div>
+        <div id="cam-err" style="display:none;margin-top:.65rem;padding:.7rem;background:rgba(255,85,105,.08);border:1px solid rgba(255,85,105,.25);border-radius:8px;">
+          <div style="color:var(--danger);font-size:.8rem;margin-bottom:.45rem;">⚠️ Camera permission denied ya unavailable.</div>
+          <button class="btn btn-danger" style="font-size:.65rem;padding:.38rem .8rem;" onclick="startCam()">🔄 Retry / Allow</button>
+        </div>
+      </div>
+
+      <!-- Manual Entry — PRIMARY -->
+      <div class="card">
+        <label class="lbl" style="margin-bottom:.5rem;">⌨️ Barcode Scan / Type Karo — Enter dabao</label>
+        <div style="display:flex;gap:.5rem;">
+          <input id="inp-bc" class="inp"
+            type="text"
+            placeholder="Barcode yahan type ya paste karo…"
+            style="font-family:'Space Mono',monospace;font-size:.95rem;letter-spacing:.05em;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch();}"
+            autocomplete="off" autofocus/>
+          <button class="btn btn-volt" onclick="doSearch()" style="white-space:nowrap;padding:.6rem 1rem;">🔍 Search</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--muted);margin-top:.35rem;">
+          💡 USB scanner gun ho to directly yahan scan karo — auto Enter ho jaata hai
+        </div>
+      </div>
+
+      <!-- Lookup status bar -->
+      <div id="lookup-bar" style="display:none;background:var(--surface);border:1px solid var(--border);
+        border-radius:8px;padding:.65rem .9rem;display:flex;align-items:center;gap:.6rem;font-size:.8rem;">
+        <span id="lb-icon">🔍</span>
+        <span id="lb-msg" style="flex:1;line-height:1.4;"></span>
+        <span id="lb-badge" class="badge" style="white-space:nowrap;"></span>
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- RIGHT: Form -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;">
+        <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">📝 Transaction</span>
+        <button class="btn btn-ghost" style="font-size:.62rem;padding:.3rem .65rem;" onclick="clearForm()">✕ Clear</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.85rem;">
+        <!-- Barcode display -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.55rem .85rem;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace;">BARCODE</span>
+          <span id="disp-bc" style="font-family:'Space Mono',monospace;font-size:.9rem;color:var(--accent);font-weight:700;">—</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">
+          <div>
+            <label class="lbl">Product Name</label>
+            <input id="f-name" class="inp" type="text" placeholder="Auto-fill hoga…"/>
+          </div>
+          <div>
+            <label class="lbl">Category</label>
+            <input id="f-cat" class="inp" type="text" placeholder="Auto-fill hoga…"/>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Vendor Name</label>
+          <select id="f-vendor" class="inp"><option value="">— Select Vendor —</option></select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">
+          <div>
+            <label class="lbl">Rate (₹)</label>
+            <input id="f-rate" class="inp" type="number" min="0" step="0.01" placeholder="0.00" oninput="calcAmt()"/>
+          </div>
+          <div>
+            <label class="lbl">Quantity</label>
+            <input id="f-qty" class="inp" type="number" min="1" value="1" oninput="calcAmt()"/>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Transaction Type</label>
+          <div class="toggle-group">
+            <button id="btn-in" onclick="setTx('in')" class="sel-in">▲ Stock In</button>
+            <button id="btn-out" onclick="setTx('out')">▼ Stock Out</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.1rem .1rem 0;">
+          <span style="font-size:.76rem;color:var(--muted);">Net Amount</span>
+          <span id="net-amt" style="font-family:'Space Mono',monospace;font-size:1.1rem;color:var(--accent);font-weight:700;">₹ 0.00</span>
+        </div>
+        <button id="save-btn" class="btn btn-volt" style="width:100%;justify-content:center;padding:.7rem;" onclick="saveTx()">
+          <span id="save-lbl">💾 Save Transaction</span>
+        </button>
+      </div>
+    </div><!-- /right -->
+  </div>
+
+  <!-- Inventory Table -->
+  <div class="card" style="margin-top:1.1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;">
+      <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">📦 Current Stock</span>
+      <button class="btn btn-ghost" style="font-size:.62rem;padding:.3rem .7rem;" onclick="loadInv()">🔄 Refresh</button>
+    </div>
+    <div id="inv-stats" class="g3" style="margin-bottom:.9rem;"></div>
+    <div style="overflow-x:auto;">
+      <table class="dtable">
+        <thead><tr><th>Barcode</th><th>Product Name</th><th>Category</th><th>Vendor</th><th>Stock</th><th>Updated</th></tr></thead>
+        <tbody id="inv-body"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">Refresh dabao</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div><!-- /inventory -->
+
+
+<!-- ======= SALES TAB ======= -->
+<div id="tab-sales" class="tab-panel">
+  <div class="gh" style="align-items:start;">
+    <div style="display:flex;flex-direction:column;gap:.9rem;">
+      <div class="card">
+        <div style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.9rem;">📤 File Upload</div>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-inp').click()">
+          <div style="font-size:2rem;margin-bottom:.5rem;">📂</div>
+          <div style="font-weight:600;margin-bottom:.25rem;">Excel / CSV Drop Karo</div>
+          <div style="font-size:.78rem;color:var(--muted);">ya click karke browse karo</div>
+          <div class="badge b-neutral" style="margin-top:.5rem;font-size:.58rem;">.xlsx · .xls · .csv</div>
+        </div>
+        <input id="file-inp" type="file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFile(this.files[0])"/>
+        <div id="file-info" style="display:none;margin-top:.65rem;background:var(--surface);border:1px solid var(--border);
+          border-radius:8px;padding:.6rem .85rem;align-items:center;gap:.65rem;">
+          <div style="font-size:1.3rem;">📄</div>
+          <div style="flex:1;min-width:0;">
+            <div id="file-nm" style="font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+            <div id="file-sz" style="font-size:.68rem;color:var(--muted);"></div>
+          </div>
+          <button class="btn btn-ghost" style="padding:.28rem .55rem;font-size:.62rem;" onclick="clearFile()">✕</button>
+        </div>
+        <div style="margin-top:.7rem;padding:.7rem;background:rgba(198,241,53,.05);border:1px solid rgba(198,241,53,.12);border-radius:8px;">
+          <div style="font-size:.65rem;font-family:'Space Mono',monospace;color:var(--accent);margin-bottom:.35rem;">PARSE RULES</div>
+          <div style="font-size:.73rem;color:var(--muted);line-height:1.7;">
+            • Pehle 6 rows skip (metadata)<br/>
+            • Columns: Loc.Code, Date, Dept, SubQty, TV, T1, T2, T3, Amount<br/>
+            • Empty rows aur dates auto-clean
+          </div>
+        </div>
+      </div>
+      <div id="parse-card" class="card" style="display:none;">
+        <div style="display:flex;align-items:center;gap:.55rem;margin-bottom:.55rem;">
+          <span class="loader"></span><span style="font-size:.8rem;font-weight:500;">Processing…</span>
+        </div>
+        <div id="parse-log" style="font-size:.7rem;color:var(--muted);line-height:1.9;font-family:'Space Mono',monospace;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;">
+        <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">👁 Preview</span>
+        <div style="display:flex;gap:.4rem;align-items:center;">
+          <span id="prev-cnt" class="badge b-neutral" style="display:none;"></span>
+          <button id="confirm-btn" class="btn btn-success" style="display:none;font-size:.66rem;padding:.42rem .9rem;" onclick="confirmUpload()">✅ Confirm Upload</button>
+        </div>
+      </div>
+      <div id="prev-empty" style="text-align:center;padding:2.5rem;color:var(--muted);">
+        <div style="font-size:2.2rem;opacity:.3;margin-bottom:.6rem;">📊</div>
+        <div style="font-size:.8rem;">File upload karo to data yahan dikhega</div>
+      </div>
+      <div id="prev-wrap" style="display:none;overflow-x:auto;">
+        <table class="dtable"><thead id="prev-head"></thead><tbody id="prev-body"></tbody></table>
+      </div>
+      <div id="val-sum" class="g3" style="display:none;margin-top:.9rem;"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1.1rem;">
+    <div style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.8rem;">🕐 Session History</div>
+    <div id="upload-hist" style="text-align:center;padding:1.2rem;color:var(--muted);font-size:.8rem;">Koi upload nahi abhi tak</div>
+  </div>
+</div>
+
+  <!-- ══ DEBUG PANEL — GAS connection test ══ -->
+  <div id="debug-panel" class="card" style="margin-top:1.1rem;display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;">
+      <span style="font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);">🔧 Debug Log</span>
+      <div style="display:flex;gap:.5rem;">
+        <button class="btn btn-ghost" style="font-size:.62rem;padding:.3rem .65rem;" onclick="testMasterLookup()">Test Barcode Lookup</button>
+        <button class="btn btn-ghost" style="font-size:.62rem;padding:.3rem .65rem;" onclick="document.getElementById('debug-panel').style.display='none'">✕ Close</button>
+      </div>
+    </div>
+    <div style="margin-bottom:.7rem;display:flex;gap:.5rem;align-items:center;">
+      <input id="debug-bc" class="inp" type="text" placeholder="Test barcode daalo (e.g. 8202)" style="font-family:'Space Mono',monospace;font-size:.85rem;max-width:220px;"/>
+      <button class="btn btn-volt" style="font-size:.65rem;padding:.42rem .9rem;" onclick="testMasterLookup()">🔍 Test</button>
+    </div>
+    <div id="debug-log" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);max-height:250px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem;line-height:1.6;">
+      Logs yahan dikhenge…
+    </div>
+  </div>
+
+</main>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  ⚙️  CONFIG — Yahan apna GAS URL daalo
+// ═══════════════════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbysiyDFPl9L2a2UZEksl-Ej2frJlwvK1C6kHeRKDqfCqqp8ICmkVafks3krTie_soW2/exec';
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let stream      = null;   // camera stream
+let scanning    = false;
+let rafId       = null;   // requestAnimationFrame id
+let lastCode    = '';
+let lastCodeMs  = 0;
+let txType      = 'in';
+let isNew       = false;
+let cleanRows   = [];
+let upHist      = [];
+const COLS = ['Product Location Code','Date','Dept','SubQty','TV','T1','T2','T3','Amount'];
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadVendors();
+  checkConn();
+});
+
+// ─── Connection check ────────────────────────────
+async function checkConn() {
+  const b = document.getElementById('conn-badge');
+  if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    b.className = 'badge b-warn';
+    b.innerHTML = '⚠ GAS URL Set Karo';
+    dbg('❌ GAS_URL placeholder hai — set karo!');
+    return;
+  }
+  dbg('Connecting to GAS: ' + GAS_URL.substring(0,60) + '…');
+  try {
+    const r = await gasGet({ action: 'ping' });
+    dbg('Ping response: ' + JSON.stringify(r));
+    if (r && r.ok) {
+      b.className = 'badge b-ok';
+      b.innerHTML = '<span class="pulse-dot"></span>&nbsp;Connected';
+      dbg('✅ GAS Connected!');
+    } else {
+      throw new Error('ping failed: ' + JSON.stringify(r));
+    }
+  } catch(e) {
+    dbg('Connection FAILED: ' + e.message);
+    b.className = 'badge b-danger';
+    b.innerHTML = '✕ GAS Error — tap for debug';
+  }
+}
+
+// ─── Tab switch ──────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'inventory') { loadVendors(); loadInv(); }
+}
+
+// ═══════════════════════════════════════════════════
+//  CAMERA — Native getUserMedia + Canvas barcode decode
+//  Uses BarcodeDetector API (Chrome/Android) with
+//  canvas-snapshot fallback using manual pixel decode
+// ═══════════════════════════════════════════════════
+const video    = document.getElementById('cam-video');
+const canvas   = document.getElementById('cam-canvas');
+const ctx      = canvas.getContext('2d', { willReadFrequently: true });
+
+// Check if BarcodeDetector is available (Chrome 83+, Android Chrome)
+const hasBD = 'BarcodeDetector' in window;
+let barcodeDetector = null;
+if (hasBD) {
+  try {
+    barcodeDetector = new BarcodeDetector({
+      formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','code_93','itf','codabar','qr_code','data_matrix']
+    });
+  } catch(e) { barcodeDetector = null; }
+}
+
+async function startCam() {
+  stopCam();
+  document.getElementById('cam-err').style.display = 'none';
+  setSS('Starting…','neutral');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal:'environment' }, width:{ ideal:1280 }, height:{ ideal:720 } }
+    });
+    video.srcObject = stream;
+    await video.play();
+    video.style.display = 'block';
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('scan-overlay').style.display = 'block';
+    scanning = true;
+    setSS('Scanning…','ok');
+    if (hasBD && barcodeDetector) {
+      toast('Camera ready — barcode ke saamne rakho 📷','info');
+      scanLoopBD();
+    } else {
+      toast('BarcodeDetector unavailable — manual entry use karo','warn');
+      // Still start loop — some browsers support it partially
+      scanLoopBD();
+    }
+  } catch(err) {
+    console.error('Camera:', err);
+    document.getElementById('cam-err').style.display = 'block';
+    setSS('No Camera','danger');
+    toast('Camera allowed nahi — manual entry use karo','warn');
+  }
+}
+
+// BarcodeDetector scan loop — runs at ~10fps
+async function scanLoopBD() {
+  if (!scanning || !stream) return;
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    if (barcodeDetector) {
+      try {
+        const codes = await barcodeDetector.detect(canvas);
+        if (codes && codes.length > 0) {
+          const code = codes[0].rawValue;
+          const now  = Date.now();
+          if (code && !(code === lastCode && now - lastCodeMs < 2500)) {
+            lastCode   = code;
+            lastCodeMs = now;
+            flashCam();
+            stopCam();
+            doSearchCode(code);
+            return;
+          }
+        }
+      } catch(e) { /* ignore */ }
+    }
+  }
+  rafId = setTimeout(scanLoopBD, 100); // 10fps
+}
+
+function flashCam() {
+  const f = document.getElementById('cam-flash');
+  f.style.opacity = '1';
+  setTimeout(() => f.style.opacity = '0', 180);
+}
+
+function stopCam() {
+  scanning = false;
+  if (rafId) { clearTimeout(rafId); rafId = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  video.srcObject = null;
+  video.style.display = 'none';
+  document.getElementById('cam-placeholder').style.display = 'flex';
+  document.getElementById('scan-overlay').style.display = 'none';
+  setSS('Idle','neutral');
+}
+
+function setSS(txt, type) {
+  const el = document.getElementById('scan-status');
+  el.textContent = txt;
+  el.className = 'badge b-' + type;
+}
+
+// ═══════════════════════════════════════════════════
+//  LOOKUP
+// ═══════════════════════════════════════════════════
+function doSearch() {
+  const v = document.getElementById('inp-bc').value.trim();
+  if (!v) return toast('Pehle barcode enter karo','warn');
+  doSearchCode(v);
+}
+
+async function doSearchCode(barcode) {
+  document.getElementById('disp-bc').textContent = barcode;
+  document.getElementById('inp-bc').value = barcode;
+  setLB('🔍', 'Master Sheet check kar raha hoon…', 'neutral', '');
+  setBusy(true);
+
+  // ── 1. Master Sheet ──────────────────────────────
+  if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    dbg('⚠ GAS_URL set nahi hai — Master check skip');
+    setLB('⚠️','GAS URL set nahi — sirf online search hoga','warn','NO GAS');
+  } else {
+    dbg('Master lookup start: barcode=' + barcode);
+    try {
+      const r = await gasGet({ action:'lookupBarcode', barcode: barcode });
+      dbg('Master response: ' + JSON.stringify(r).substring(0,150));
+      if (r && r.found === true) {
+        fillForm(r.productName||'', r.productCategory||'', r.vendorName||'');
+        setLB('✅', `Master Sheet mein mila: "${r.productName||barcode}"`, 'ok', 'MASTER');
+        isNew = false; setBusy(false);
+        toast(`✅ "${r.productName}" — Master Sheet se!`, 'success');
+        return;
+      } else {
+        dbg('Master: barcode not found (found=' + r?.found + ')');
+      }
+    } catch(e) {
+      dbg('Master FAIL: ' + e.message);
+      setLB('❌','Master Sheet error: ' + e.message,'warn','GAS ERR');
+    }
+  }
+
+  // ── 2. Open Food Facts ───────────────────────────
+  setLB('📡','Open Food Facts search kar raha hoon…','warn','');
+  try {
+    const r = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${barcode}?fields=product_name,product_name_en,categories_tags,brands`,
+      { signal: AbortSignal.timeout(7000) }
+    );
+    const d = await r.json();
+    if (d.status === 1 && d.product) {
+      const p    = d.product;
+      const name = p.product_name || p.product_name_en || p.brands || '';
+      const cat  = cleanTag(p.categories_tags);
+      if (name) {
+        fillForm(name, cat, '');
+        setLB('✅', `Open Food Facts: "${name}"`, 'ok', 'OFacts');
+        isNew = true; setBusy(false);
+        toast(`"${name}" — online database se!`, 'success');
+        return;
+      }
+    }
+  } catch(e) { console.warn('OFacts:', e.message); }
+
+  // ── 3. UPC Item DB ───────────────────────────────
+  setLB('🔄','UPC Item DB check kar raha hoon…','warn','');
+  try {
+    const r = await fetch(
+      `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    const d = await r.json();
+    if (d.code === 'OK' && d.items?.length) {
+      const item = d.items[0];
+      if (item.title) {
+        fillForm(item.title, item.category||'', item.brand||'');
+        setLB('✅', `UPC DB: "${item.title}"`, 'ok', 'UPC-DB');
+        isNew = true; setBusy(false);
+        toast(`"${item.title}" — UPC database se!`, 'success');
+        return;
+      }
+    }
+  } catch(e) { console.warn('UPC DB:', e.message); }
+
+  // ── Not found ────────────────────────────────────
+  setLB('⚠️','Koi database mein nahi mila — manually bharo','warn','NEW');
+  isNew = true; setBusy(false);
+  toast('Product nahi mila — naam khud likho','warn');
+  document.getElementById('f-name').focus();
+}
+
+function cleanTag(tags) {
+  if (!tags?.length) return '';
+  const t = (tags.find(x => x.startsWith('en:')) || tags[0]);
+  return t.replace('en:','').replace(/-/g,' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function setLB(icon, msg, type, badge) {
+  const bar = document.getElementById('lookup-bar');
+  bar.style.display = 'flex';
+  document.getElementById('lb-icon').textContent = icon;
+  document.getElementById('lb-msg').textContent  = msg;
+  const b = document.getElementById('lb-badge');
+  b.textContent = badge;
+  b.className   = badge ? `badge b-${type === 'ok' ? 'ok' : type === 'warn' ? 'warn' : 'neutral'}` : '';
+}
+
+function fillForm(name, cat, vendor) {
+  document.getElementById('f-name').value = name;
+  document.getElementById('f-cat').value  = cat;
+  if (vendor) {
+    const sel = document.getElementById('f-vendor');
+    for (const o of sel.options) {
+      if (o.value.toLowerCase().includes(vendor.toLowerCase())) { sel.value = o.value; break; }
+    }
+  }
+  calcAmt();
+}
+
+function setBusy(b) {
+  ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
+    document.getElementById(id).style.opacity = b ? '.4' : '1'
+  );
+}
+
+// ═══════════════════════════════════════════════════
+//  FORM
+// ═══════════════════════════════════════════════════
+function setTx(t) {
+  txType = t;
+  document.getElementById('btn-in').className  = t === 'in'  ? 'sel-in' : '';
+  document.getElementById('btn-out').className = t === 'out' ? 'sel-out': '';
+  calcAmt();
+}
+function calcAmt() {
+  const r = parseFloat(document.getElementById('f-rate').value)||0;
+  const q = parseFloat(document.getElementById('f-qty').value)||0;
+  document.getElementById('net-amt').textContent = '₹ '+(r*q).toFixed(2);
+}
+function clearForm() {
+  document.getElementById('disp-bc').textContent = '—';
+  document.getElementById('inp-bc').value = '';
+  ['f-name','f-cat','f-rate'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-qty').value = 1;
+  document.getElementById('f-vendor').selectedIndex = 0;
+  document.getElementById('lookup-bar').style.display = 'none';
+  document.getElementById('net-amt').textContent = '₹ 0.00';
+  isNew = false; calcAmt();
+}
+
+async function saveTx() {
+  const bc   = document.getElementById('disp-bc').textContent.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const cat  = document.getElementById('f-cat').value.trim();
+  const vend = document.getElementById('f-vendor').value.trim();
+  const rate = parseFloat(document.getElementById('f-rate').value)||0;
+  const qty  = parseInt(document.getElementById('f-qty').value)||0;
+
+  if (!bc || bc === '—') return toast('Pehle barcode scan ya enter karo','warn');
+  if (!name)             return toast('Product Name required hai','warn');
+  if (qty < 1)           return toast('Quantity 1 se kam nahi ho sakti','warn');
+
+  if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    return toast('⚠ GAS URL abhi set nahi hai — Code.gs deploy karo aur URL dalo','warn');
+  }
+
+  const btn = document.getElementById('save-btn');
+  const lbl = document.getElementById('save-lbl');
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="loader" style="width:12px;height:12px;border-width:1.5px;"></span> Saving…';
+
+  try {
+    const res = await gasPost({
+      action:'saveTransaction', barcode:bc, productName:name, productCategory:cat,
+      vendorName:vend, rate, quantity:qty,
+      transactionType: txType === 'in' ? 'Stock In' : 'Stock Out', isNew
+    });
+    if (res.success) {
+      toast(res.message || 'Transaction save ho gaya!','success');
+      clearForm(); loadInv();
+    } else {
+      toast(res.error || 'Save nahi hua','error');
+    }
+  } catch(e) {
+    toast('Save error: ' + e.message,'error');
+  } finally {
+    btn.disabled = false; lbl.textContent = '💾 Save Transaction';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  VENDORS & INVENTORY
+// ═══════════════════════════════════════════════════
+async function loadVendors() {
+  if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') return;
+  try {
+    const r   = await gasGet({ action:'getVendors' });
+    const sel = document.getElementById('f-vendor');
+    sel.innerHTML = '<option value="">— Select Vendor —</option>';
+    (r.vendors||[]).forEach(v => {
+      const o = document.createElement('option');
+      o.value = o.textContent = v;
+      sel.appendChild(o);
+    });
+  } catch(e) { console.warn('Vendors:', e.message); }
+}
+
+async function loadInv() {
+  const tb = document.getElementById('inv-body');
+  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem"><span class="loader"></span></td></tr>';
+  if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--warn);">⚠ GAS URL set karo</td></tr>';
+    return;
+  }
+  try {
+    const r = await gasGet({ action:'getInventory' });
+    const rows = r.inventory||[];
+    const tot  = rows.reduce((s,r) => s+(parseFloat(r['Stock Qty'])||0),0);
+    const low  = rows.filter(r => (parseFloat(r['Stock Qty'])||0)<5).length;
+    document.getElementById('inv-stats').innerHTML = `
+      <div class="stat-card"><div class="sv">${rows.length}</div><div class="sl2">Total SKUs</div></div>
+      <div class="stat-card"><div class="sv">${tot}</div><div class="sl2">Total Units</div></div>
+      <div class="stat-card"><div class="sv" style="color:var(--danger)">${low}</div><div class="sl2">Low Stock</div></div>`;
+    if (!rows.length) {
+      tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--muted);">Inventory empty — transaction karo</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(r => {
+      const q  = parseFloat(r['Stock Qty'])||0;
+      const cl = q<5?'var(--danger)':q<20?'var(--warn)':'var(--success)';
+      const dt = r['Last Updated'] ? new Date(r['Last Updated']).toLocaleDateString('en-IN') : '—';
+      return `<tr>
+        <td style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);">${r['Barcode']||'—'}</td>
+        <td style="font-weight:600;">${r['Product Name']||'—'}</td>
+        <td><span class="badge b-neutral">${r['Product Category']||'—'}</span></td>
+        <td>${r['Vendor Name']||'—'}</td>
+        <td style="font-family:'Space Mono',monospace;font-weight:700;color:${cl};">${q}</td>
+        <td style="font-size:.72rem;color:var(--muted);">${dt}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tb.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--danger);">Error: ${e.message}</td></tr>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  FILE UPLOAD
+// ═══════════════════════════════════════════════════
+const DZ = document.getElementById('drop-zone');
+DZ.addEventListener('dragover',  e=>{e.preventDefault();DZ.classList.add('over');});
+DZ.addEventListener('dragleave', ()=>DZ.classList.remove('over'));
+DZ.addEventListener('drop',      e=>{e.preventDefault();DZ.classList.remove('over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+
+function clearFile() {
+  document.getElementById('file-inp').value='';
+  document.getElementById('file-info').style.display='none';
+  document.getElementById('prev-empty').style.display='block';
+  document.getElementById('prev-wrap').style.display='none';
+  document.getElementById('confirm-btn').style.display='none';
+  document.getElementById('prev-cnt').style.display='none';
+  document.getElementById('val-sum').style.display='none';
+  cleanRows=[];
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['xlsx','xls','csv'].includes(ext)) return toast('Sirf Excel ya CSV allowed hai','warn');
+  const fi = document.getElementById('file-info');
+  fi.style.display = 'flex';
+  document.getElementById('file-nm').textContent = file.name;
+  document.getElementById('file-sz').textContent = (file.size/1024).toFixed(1)+' KB';
+  document.getElementById('parse-card').style.display = 'block';
+  document.getElementById('prev-empty').style.display = 'none';
+  document.getElementById('prev-wrap').style.display = 'none';
+  document.getElementById('confirm-btn').style.display = 'none';
+  const log = document.getElementById('parse-log');
+  const ln  = t => log.innerHTML += t + '<br/>';
+  log.innerHTML = '';
+  try {
+    const buf = await file.arrayBuffer();
+    const wb  = XLSX.read(buf,{type:'array',cellDates:true});
+    const ws  = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:true});
+    ln(`📋 Total rows: <b>${raw.length}</b>`);
+    ln(`⏭ Pehle 6 rows skip (metadata)…`);
+    const dRows = raw.slice(6);
+    const hdr   = dRows[0];
+    const colMap = {};
+    COLS.forEach(c => {
+      const i = hdr.findIndex(h => String(h).trim().toLowerCase() === c.toLowerCase());
+      if (i!==-1) colMap[c]=i;
+    });
+    ln(`✓ Matched: <b>${Object.keys(colMap).join(', ')||'none'}</b>`);
+    let skip=0,dfx=0;
+    cleanRows=[];
+    dRows.slice(1).forEach(row => {
+      const ok=COLS.some(c=>colMap[c]!==undefined&&String(row[colMap[c]]??'').trim());
+      if(!ok){skip++;return;}
+      const obj={};
+      COLS.forEach(c=>{
+        const idx=colMap[c]; let v=idx!==undefined?row[idx]:'';
+        if(c==='Date'&&v){
+          let d=v instanceof Date?v:new Date(v);
+          if(isNaN(d)&&typeof v==='number')d=new Date(Math.round((v-25569)*86400000));
+          if(!isNaN(d)){v=d.toISOString().split('T')[0];dfx++;}else v=String(v).trim();
+        }
+        if(['SubQty','TV','T1','T2','T3','Amount'].includes(c))
+          v=parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0;
+        obj[c]=v;
+      });
+      cleanRows.push(obj);
+    });
+    ln(`✅ Clean rows: <b>${cleanRows.length}</b> | Skipped: <b>${skip}</b> | Dates fixed: <b>${dfx}</b>`);
+    document.getElementById('parse-card').style.display='none';
+    renderPreview();
+  } catch(e) {
+    document.getElementById('parse-card').style.display='none';
+    toast('Parse error: '+e.message,'error');
+  }
+}
+
+function renderPreview() {
+  document.getElementById('prev-head').innerHTML='<tr>'+COLS.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  document.getElementById('prev-body').innerHTML=cleanRows.slice(0,50).map(r=>'<tr>'+COLS.map(c=>`<td>${r[c]??''}</td>`).join('')+'</tr>').join('');
+  document.getElementById('prev-wrap').style.display='block';
+  const cnt=document.getElementById('prev-cnt');
+  cnt.style.display='inline-flex'; cnt.className='badge b-ok';
+  cnt.textContent=cleanRows.length+' rows'+(cleanRows.length>50?' (50 shown)':'');
+  document.getElementById('confirm-btn').style.display=cleanRows.length?'inline-flex':'none';
+  const amt=cleanRows.reduce((s,r)=>s+(parseFloat(r.Amount)||0),0);
+  const dep=new Set(cleanRows.map(r=>r.Dept).filter(Boolean)).size;
+  const vs=document.getElementById('val-sum');
+  vs.style.display='grid';
+  vs.innerHTML=`
+    <div class="stat-card"><div class="sv">${cleanRows.length}</div><div class="sl2">Rows</div></div>
+    <div class="stat-card"><div class="sv" style="font-size:.95rem;">₹${amt.toLocaleString('en-IN',{maximumFractionDigits:0})}</div><div class="sl2">Total Amt</div></div>
+    <div class="stat-card"><div class="sv">${dep}</div><div class="sl2">Depts</div></div>`;
+}
+
+async function confirmUpload() {
+  if (!cleanRows.length) return toast('Upload karne ke liye data nahi hai','warn');
+  if (!GAS_URL||GAS_URL==='YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') return toast('GAS URL set karo pehle','warn');
+  const btn=document.getElementById('confirm-btn');
+  btn.disabled=true; btn.innerHTML='<span class="loader" style="width:12px;height:12px;border-width:1.5px;"></span> Uploading…';
+  try {
+    const r=await gasPost({action:'saveSales',rows:cleanRows});
+    if(r.success){
+      toast(r.message||'Sales saved!','success');
+      upHist.unshift({time:new Date().toLocaleTimeString('en-IN'),rows:cleanRows.length,file:document.getElementById('file-nm').textContent});
+      renderHist(); clearFile();
+    } else toast(r.error||'Upload failed','error');
+  } catch(e){ toast('Upload error: '+e.message,'error'); }
+  finally{ btn.disabled=false; btn.innerHTML='✅ Confirm Upload'; }
+}
+
+function renderHist() {
+  const el=document.getElementById('upload-hist');
+  if(!upHist.length){el.innerHTML='Koi upload nahi abhi tak';return;}
+  el.innerHTML=`<table class="dtable"><thead><tr><th>Time</th><th>File</th><th>Rows</th><th>Status</th></tr></thead><tbody>
+    ${upHist.map(h=>`<tr>
+      <td style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted);">${h.time}</td>
+      <td>${h.file}</td><td style="font-family:'Space Mono',monospace;color:var(--accent);">${h.rows}</td>
+      <td><span class="badge b-ok">✓ Saved</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  GAS API HELPERS
+//  GAS Web App ek redirect deta hai — fetch ka
+//  default 'follow' us redirect ko handle karta hai.
+//  Lekin kuch browsers mein CORS + redirect issue
+//  aata hai — isliye hum no-cors fallback bhi rakhte hain.
+// ═══════════════════════════════════════════════════
+async function gasGet(params) {
+  const url = new URL(GAS_URL);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+  const urlStr = url.toString();
+
+  dbg('GET → ' + urlStr.substring(0, 80) + '…');
+
+  // Try 1: Normal fetch with redirect follow
+  try {
+    const r = await fetch(urlStr, { method:'GET', redirect:'follow' });
+    const text = await r.text();
+    dbg('GET response (' + r.status + '): ' + text.substring(0, 120));
+    const parsed = JSON.parse(text);
+    return parsed;
+  } catch(e) {
+    dbg('GET error: ' + e.message);
+    throw e;
+  }
+}
+
+async function gasPost(data) {
+  dbg('POST action: ' + data.action);
+  try {
+    // text/plain → CORS preflight nahi hoti, GAS directly accept karta hai
+    const r = await fetch(GAS_URL, {
+      method:  'POST',
+      redirect:'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body:    JSON.stringify(data)
+    });
+    const text = await r.text();
+    dbg('POST response (' + r.status + '): ' + text.substring(0, 120));
+    return JSON.parse(text);
+  } catch(e) {
+    dbg('POST error: ' + e.message);
+    throw e;
+  }
+}
+
+// ─── Debug logger — screen pe dikhta hai ────────
+const _dbgLogs = [];
+function dbg(msg) {
+  const t = new Date().toLocaleTimeString('en-IN');
+  _dbgLogs.unshift('[' + t + '] ' + msg);
+  if (_dbgLogs.length > 30) _dbgLogs.pop();
+  const el = document.getElementById('debug-log');
+  if (el) el.innerHTML = _dbgLogs.map(l =>
+    `<div style="border-bottom:1px solid rgba(42,42,66,.5);padding:.2rem 0;word-break:break-all;">${l}</div>`
+  ).join('');
+  console.log('[ShopOS]', msg);
+}
+
+// ─── Debug panel toggle ──────────────────────────
+function toggleDebug() {
+  const p = document.getElementById('debug-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  if (p.style.display === 'block') {
+    dbg('=== Debug Panel Opened ===');
+    dbg('GAS_URL = ' + (GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE' ? '❌ NOT SET' : '✅ ' + GAS_URL.substring(0,60)+'…'));
+  }
+}
+
+// ─── Direct Master lookup test ───────────────────
+async function testMasterLookup() {
+  const bc = document.getElementById('debug-bc').value.trim()
+          || document.getElementById('inp-bc').value.trim()
+          || '8202';
+  document.getElementById('debug-bc').value = bc;
+
+  if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    dbg('❌ GAS_URL set nahi hai');
+    toast('GAS URL set karo pehle','error');
+    return;
+  }
+
+  dbg('=== MANUAL TEST: barcode=' + bc + ' ===');
+  try {
+    const r = await gasGet({ action:'lookupBarcode', barcode: bc });
+    dbg('RESULT: ' + JSON.stringify(r));
+    if (r.found) {
+      toast(`✅ Found: ${r.productName} | ${r.productCategory}`, 'success');
+    } else if (r.error) {
+      toast('GAS Error: ' + r.error, 'error');
+    } else {
+      toast(`Barcode "${bc}" Master mein nahi hai (found=false)`, 'warn');
+    }
+  } catch(e) {
+    dbg('TEST FAILED: ' + e.message);
+    toast('Test failed: ' + e.message, 'error');
+  }
+}
+
+
+function toast(msg, type='info') {
+  const c=document.getElementById('toast');
+  const ic={success:'✅',error:'❌',warn:'⚠️',info:'💬'};
+  const bd={success:'var(--success)',error:'var(--danger)',warn:'var(--warn)',info:'var(--accent)'};
+  const d=document.createElement('div');
+  d.className='ti';
+  d.style.borderLeft='3px solid '+(bd[type]||'var(--border)');
+  d.innerHTML=`<span>${ic[type]||'ℹ️'}</span><span style="flex:1">${msg}</span>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:0;">✕</button>`;
+  c.appendChild(d);
+  setTimeout(()=>{d.style.transition='opacity .2s';d.style.opacity='0';setTimeout(()=>d.remove(),200);},4500);
+}
+</script>
+</body>
+</html>
