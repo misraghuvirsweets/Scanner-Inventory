@@ -99,7 +99,6 @@ select.inp option{background:var(--card);}
 </head>
 <body>
 
-<!-- HEADER -->
 <header style="background:rgba(13,13,20,.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;">
   <div style="max-width:960px;margin:0 auto;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
     <div style="display:flex;align-items:center;gap:.65rem;">
@@ -125,14 +124,11 @@ select.inp option{background:var(--card);}
 
 <main style="max-width:960px;margin:0 auto;padding:1.1rem 1rem 3rem;">
 
-<!-- ======= INVENTORY TAB ======= -->
 <div id="tab-inventory" class="tab-panel active">
   <div class="gh" style="align-items:start;">
 
-    <!-- LEFT -->
     <div style="display:flex;flex-direction:column;gap:.9rem;">
 
-      <!-- Camera Scanner -->
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;">
           <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">📷 Camera Scanner</span>
@@ -161,29 +157,27 @@ select.inp option{background:var(--card);}
           <button class="btn btn-ghost" onclick="stopCam()">■ Stop</button>
         </div>
         <div id="cam-err" style="display:none;margin-top:.65rem;padding:.7rem;background:rgba(255,85,105,.08);border:1px solid rgba(255,85,105,.25);border-radius:8px;">
-          <div style="color:var(--danger);font-size:.8rem;margin-bottom:.45rem;">⚠️ Camera permission denied ya unavailable.</div>
+          <div style="color:var(--danger);font-size:.8rem;margin-bottom:.45rem;">⚠️ Camera permission denied or unavailable.</div>
           <button class="btn btn-danger" style="font-size:.65rem;padding:.38rem .8rem;" onclick="startCam()">🔄 Retry / Allow</button>
         </div>
       </div>
 
-      <!-- Manual Entry — PRIMARY -->
       <div class="card">
-        <label class="lbl" style="margin-bottom:.5rem;">⌨️ Barcode Scan / Type Karo — Enter dabao</label>
+        <label class="lbl" style="margin-bottom:.5rem;">⌨️ Barcode Scan / Type — Press Enter</label>
         <div style="display:flex;gap:.5rem;">
           <input id="inp-bc" class="inp"
             type="text"
-            placeholder="Barcode yahan type ya paste karo…"
+            placeholder="Type or scan barcode here…"
             style="font-family:'Space Mono',monospace;font-size:.95rem;letter-spacing:.05em;"
             onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch();}"
             autocomplete="off" autofocus/>
           <button class="btn btn-volt" onclick="doSearch()" style="white-space:nowrap;padding:.6rem 1rem;">🔍 Search</button>
         </div>
         <div style="font-size:.7rem;color:var(--muted);margin-top:.35rem;">
-          💡 USB scanner gun ho to directly yahan scan karo — auto Enter ho jaata hai
+          💡 If using a USB scanner gun, scan directly here — it triggers auto Enter
         </div>
       </div>
 
-      <!-- Lookup status bar -->
       <div id="lookup-bar" style="display:none;background:var(--surface);border:1px solid var(--border);
         border-radius:8px;padding:.65rem .9rem;display:flex;align-items:center;gap:.6rem;font-size:.8rem;">
         <span id="lb-icon">🔍</span>
@@ -191,16 +185,12 @@ select.inp option{background:var(--card);}
         <span id="lb-badge" class="badge" style="white-space:nowrap;"></span>
       </div>
 
-    </div><!-- /left -->
-
-    <!-- RIGHT: Form -->
-    <div class="card">
+    </div><div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;">
-        <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">📝 Transaction</span>
-        <button class="btn btn-ghost" style="font-size:.62rem;padding:.3rem .65rem;" onclick="clearForm()">✕ Clear</button>
+        <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">📝 Current Staging Queue (<span id="queue-count">0</span>)</span>
+        <button class="btn btn-ghost" style="font-size:.62rem;padding:.3rem .65rem;" onclick="clearForm()">✕ Clear Form</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:.85rem;">
-        <!-- Barcode display -->
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.55rem .85rem;display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace;">BARCODE</span>
           <span id="disp-bc" style="font-family:'Space Mono',monospace;font-size:.9rem;color:var(--accent);font-weight:700;">—</span>
@@ -208,11 +198,11 @@ select.inp option{background:var(--card);}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">
           <div>
             <label class="lbl">Product Name</label>
-            <input id="f-name" class="inp" type="text" placeholder="Auto-fill hoga…"/>
+            <input id="f-name" class="inp" type="text" placeholder="Auto-filled…"/>
           </div>
           <div>
             <label class="lbl">Category</label>
-            <input id="f-cat" class="inp" type="text" placeholder="Auto-fill hoga…"/>
+            <input id="f-cat" class="inp" type="text" placeholder="Auto-filled…"/>
           </div>
         </div>
         <div>
@@ -232,22 +222,32 @@ select.inp option{background:var(--card);}
         <div>
           <label class="lbl">Transaction Type</label>
           <div class="toggle-group">
-            <button id="btn-in" onclick="setTx('in')" class="sel-in">▲ Stock In</button>
-            <button id="btn-out" onclick="setTx('out')">▼ Stock Out</button>
+            <button id="btn-in" onclick="setTx('in')" class="sel-in">▲ Production</button>
+            <button id="btn-out" onclick="setTx('out')">▼ Dispatch</button>
           </div>
         </div>
+        
+        <button id="add-queue-btn" class="btn btn-ghost" style="width:100%;justify-content:center;padding:.5rem;border-color:var(--accent);color:var(--accent);" onclick="addToQueue()">
+          ➕ Add Item to Staging Queue
+        </button>
+
+        <div style="border-top:1px dashed var(--border);margin-top:.3rem;padding-top:.5rem;">
+          <label class="lbl">Batch Preview List</label>
+          <div style="max-height:120px;overflow-y:auto;background:var(--surface);border-radius:6px;padding:.4rem;" id="queue-preview-list">
+            <div style="font-size:.7rem;color:var(--muted);text-align:center;padding:.5rem;">Queue is empty</div>
+          </div>
+        </div>
+
         <div style="display:flex;justify-content:space-between;align-items:center;padding:.1rem .1rem 0;">
-          <span style="font-size:.76rem;color:var(--muted);">Net Amount</span>
+          <span style="font-size:.76rem;color:var(--muted);">Total Batch Amount</span>
           <span id="net-amt" style="font-family:'Space Mono',monospace;font-size:1.1rem;color:var(--accent);font-weight:700;">₹ 0.00</span>
         </div>
         <button id="save-btn" class="btn btn-volt" style="width:100%;justify-content:center;padding:.7rem;" onclick="saveTx()">
           <span id="save-lbl">💾 Save Transaction</span>
         </button>
       </div>
-    </div><!-- /right -->
-  </div>
+    </div></div>
 
-  <!-- Inventory Table -->
   <div class="card" style="margin-top:1.1rem;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;">
       <span style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;">📦 Current Stock</span>
@@ -257,23 +257,19 @@ select.inp option{background:var(--card);}
     <div style="overflow-x:auto;">
       <table class="dtable">
         <thead><tr><th>Barcode</th><th>Product Name</th><th>Category</th><th>Vendor</th><th>Stock</th><th>Updated</th></tr></thead>
-        <tbody id="inv-body"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">Refresh dabao</td></tr></tbody>
+        <tbody id="inv-body"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">Click Refresh</td></tr></tbody>
       </table>
     </div>
   </div>
-</div><!-- /inventory -->
-
-
-<!-- ======= SALES TAB ======= -->
-<div id="tab-sales" class="tab-panel">
+</div><div id="tab-sales" class="tab-panel">
   <div class="gh" style="align-items:start;">
     <div style="display:flex;flex-direction:column;gap:.9rem;">
       <div class="card">
         <div style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.9rem;">📤 File Upload</div>
         <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-inp').click()">
           <div style="font-size:2rem;margin-bottom:.5rem;">📂</div>
-          <div style="font-weight:600;margin-bottom:.25rem;">Excel / CSV Drop Karo</div>
-          <div style="font-size:.78rem;color:var(--muted);">ya click karke browse karo</div>
+          <div style="font-weight:600;margin-bottom:.25rem;">Drop Excel / CSV here</div>
+          <div style="font-size:.78rem;color:var(--muted);">or click to browse</div>
           <div class="badge b-neutral" style="margin-top:.5rem;font-size:.58rem;">.xlsx · .xls · .csv</div>
         </div>
         <input id="file-inp" type="file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFile(this.files[0])"/>
@@ -289,9 +285,9 @@ select.inp option{background:var(--card);}
         <div style="margin-top:.7rem;padding:.7rem;background:rgba(198,241,53,.05);border:1px solid rgba(198,241,53,.12);border-radius:8px;">
           <div style="font-size:.65rem;font-family:'Space Mono',monospace;color:var(--accent);margin-bottom:.35rem;">PARSE RULES</div>
           <div style="font-size:.73rem;color:var(--muted);line-height:1.7;">
-            • Pehle 6 rows skip (metadata)<br/>
+            • Skip first 6 rows (metadata)<br/>
             • Columns: Loc.Code, Date, Dept, SubQty, TV, T1, T2, T3, Amount<br/>
-            • Empty rows aur dates auto-clean
+            • Empty rows and invalid dates are cleaned dynamically
           </div>
         </div>
       </div>
@@ -312,7 +308,7 @@ select.inp option{background:var(--card);}
       </div>
       <div id="prev-empty" style="text-align:center;padding:2.5rem;color:var(--muted);">
         <div style="font-size:2.2rem;opacity:.3;margin-bottom:.6rem;">📊</div>
-        <div style="font-size:.8rem;">File upload karo to data yahan dikhega</div>
+        <div style="font-size:.8rem;">Upload a file to preview processed data structures here</div>
       </div>
       <div id="prev-wrap" style="display:none;overflow-x:auto;">
         <table class="dtable"><thead id="prev-head"></thead><tbody id="prev-body"></tbody></table>
@@ -322,11 +318,10 @@ select.inp option{background:var(--card);}
   </div>
   <div class="card" style="margin-top:1.1rem;">
     <div style="font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.8rem;">🕐 Session History</div>
-    <div id="upload-hist" style="text-align:center;padding:1.2rem;color:var(--muted);font-size:.8rem;">Koi upload nahi abhi tak</div>
+    <div id="upload-hist" style="text-align:center;padding:1.2rem;color:var(--muted);font-size:.8rem;">No historical uploads recorded in this session</div>
   </div>
 </div>
 
-  <!-- ══ DEBUG PANEL — GAS connection test ══ -->
   <div id="debug-panel" class="card" style="margin-top:1.1rem;display:none;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;">
       <span style="font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);">🔧 Debug Log</span>
@@ -336,11 +331,11 @@ select.inp option{background:var(--card);}
       </div>
     </div>
     <div style="margin-bottom:.7rem;display:flex;gap:.5rem;align-items:center;">
-      <input id="debug-bc" class="inp" type="text" placeholder="Test barcode daalo (e.g. 8202)" style="font-family:'Space Mono',monospace;font-size:.85rem;max-width:220px;"/>
+      <input id="debug-bc" class="inp" type="text" placeholder="Enter barcode (e.g. 8202)" style="font-family:'Space Mono',monospace;font-size:.85rem;max-width:220px;"/>
       <button class="btn btn-volt" style="font-size:.65rem;padding:.42rem .9rem;" onclick="testMasterLookup()">🔍 Test</button>
     </div>
     <div id="debug-log" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);max-height:250px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem;line-height:1.6;">
-      Logs yahan dikhenge…
+      Logs will appear here…
     </div>
   </div>
 
@@ -349,39 +344,40 @@ select.inp option{background:var(--card);}
 
 <script>
 // ═══════════════════════════════════════════════════
-//  ⚙️  CONFIG — Yahan apna GAS URL daalo
+//  ⚙️ CONFIG — Paste Google Apps Script Web App URL
 // ═══════════════════════════════════════════════════
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbysiyDFPl9L2a2UZEksl-Ej2frJlwvK1C6kHeRKDqfCqqp8ICmkVafks3krTie_soW2/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxWuI1eHi8DMil_OLkMaM_wXq3i2KUksLk6w65xLMEUStfJbKLS44gZqW7zoYv-7BfZxA/exec';
 
 // ═══════════════════════════════════════════════════
-//  STATE
+//  STATE MANAGEMENT
 // ═══════════════════════════════════════════════════
-let stream      = null;   // camera stream
+let stream      = null;   // Camera hardware reference
 let scanning    = false;
-let rafId       = null;   // requestAnimationFrame id
+let rafId       = null;   // SetTimeout loop holder
 let lastCode    = '';
 let lastCodeMs  = 0;
-let txType      = 'in';
+let txType      = 'in';   // Default to 'in' (Production)
 let isNew       = false;
 let cleanRows   = [];
 let upHist      = [];
+let transactionQueue = []; // Holds items for multi-scanning batch upload
 const COLS = ['Product Location Code','Date','Dept','SubQty','TV','T1','T2','T3','Amount'];
 
 // ═══════════════════════════════════════════════════
-//  INIT
+//  INITIALIZATION
 // ═══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   loadVendors();
   checkConn();
 });
 
-// ─── Connection check ────────────────────────────
+// --- Connection Verification ---
 async function checkConn() {
   const b = document.getElementById('conn-badge');
   if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
     b.className = 'badge b-warn';
-    b.innerHTML = '⚠ GAS URL Set Karo';
-    dbg('❌ GAS_URL placeholder hai — set karo!');
+    b.innerHTML = '⚠ Set GAS URL';
+    dbg('❌ GAS_URL placeholder active — update required!');
     return;
   }
   dbg('Connecting to GAS: ' + GAS_URL.substring(0,60) + '…');
@@ -391,18 +387,18 @@ async function checkConn() {
     if (r && r.ok) {
       b.className = 'badge b-ok';
       b.innerHTML = '<span class="pulse-dot"></span>&nbsp;Connected';
-      dbg('✅ GAS Connected!');
+      dbg('✅ GAS Connected successfully!');
     } else {
-      throw new Error('ping failed: ' + JSON.stringify(r));
+      throw new Error('Ping operation failure: ' + JSON.stringify(r));
     }
   } catch(e) {
     dbg('Connection FAILED: ' + e.message);
     b.className = 'badge b-danger';
-    b.innerHTML = '✕ GAS Error — tap for debug';
+    b.innerHTML = '✕ GAS Error — Tap for Debug';
   }
 }
 
-// ─── Tab switch ──────────────────────────────────
+// --- Tab Controller Layout switcher ---
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -412,15 +408,12 @@ function switchTab(name, btn) {
 }
 
 // ═══════════════════════════════════════════════════
-//  CAMERA — Native getUserMedia + Canvas barcode decode
-//  Uses BarcodeDetector API (Chrome/Android) with
-//  canvas-snapshot fallback using manual pixel decode
+//  CAMERA WORKFLOWS & BARCODE RESOLVERS
 // ═══════════════════════════════════════════════════
 const video    = document.getElementById('cam-video');
 const canvas   = document.getElementById('cam-canvas');
 const ctx      = canvas.getContext('2d', { willReadFrequently: true });
 
-// Check if BarcodeDetector is available (Chrome 83+, Android Chrome)
 const hasBD = 'BarcodeDetector' in window;
 let barcodeDetector = null;
 if (hasBD) {
@@ -446,23 +439,16 @@ async function startCam() {
     document.getElementById('scan-overlay').style.display = 'block';
     scanning = true;
     setSS('Scanning…','ok');
-    if (hasBD && barcodeDetector) {
-      toast('Camera ready — barcode ke saamne rakho 📷','info');
-      scanLoopBD();
-    } else {
-      toast('BarcodeDetector unavailable — manual entry use karo','warn');
-      // Still start loop — some browsers support it partially
-      scanLoopBD();
-    }
+    toast('Camera functional — position barcode inside crosshairs 📷','info');
+    scanLoopBD();
   } catch(err) {
-    console.error('Camera:', err);
+    console.error('Camera allocation fault:', err);
     document.getElementById('cam-err').style.display = 'block';
     setSS('No Camera','danger');
-    toast('Camera allowed nahi — manual entry use karo','warn');
+    toast('Camera access denied — use manual entry input fields','warn');
   }
 }
 
-// BarcodeDetector scan loop — runs at ~10fps
 async function scanLoopBD() {
   if (!scanning || !stream) return;
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -484,10 +470,10 @@ async function scanLoopBD() {
             return;
           }
         }
-      } catch(e) { /* ignore */ }
+      } catch(e) { /* silent catch fallbacks */ }
     }
   }
-  rafId = setTimeout(scanLoopBD, 100); // 10fps
+  rafId = setTimeout(scanLoopBD, 100); // 10fps tracking process
 }
 
 function flashCam() {
@@ -514,11 +500,11 @@ function setSS(txt, type) {
 }
 
 // ═══════════════════════════════════════════════════
-//  LOOKUP
+//  BARCODE PARSING ENGINE & LOGIC SEARCHERS
 // ═══════════════════════════════════════════════════
 function doSearch() {
   const v = document.getElementById('inp-bc').value.trim();
-  if (!v) return toast('Pehle barcode enter karo','warn');
+  if (!v) return toast('Please enter or scan barcode first','warn');
   doSearchCode(v);
 }
 
@@ -526,35 +512,43 @@ async function doSearchCode(barcode) {
   barcode = String(barcode).trim();
   if (!barcode) return;
 
-  dbg('=== SEARCH: "' + barcode + '" ===');
+  dbg('=== SEARCH ENGINE EXECUTION FOR: "' + barcode + '" ===');
 
-  // UI update — barcode dikhao
+  // Display initial structural elements
   document.getElementById('disp-bc').textContent = barcode;
   document.getElementById('inp-bc').value = barcode;
-  setLB('🔍', 'Master Sheet check kar raha hoon…', 'neutral', '');
+  setLB('🔍', 'Checking Master Sheets...', 'neutral', '');
 
-  // ── 1. Master Sheet ──────────────────────────────
+  // Embedded weight computation strategy execution block
+  let automaticQuantity = 1;
+  if (barcode.length > 4) {
+    const segmentedWeightString = barcode.substring(4);
+    const parsedWeightValue = parseFloat(segmentedWeightString);
+    if (!isNaN(parsedWeightValue) && parsedWeightValue > 0) {
+      automaticQuantity = parsedWeightValue;
+      dbg('Extracted operational embedded weight quantity: ' + automaticQuantity);
+    }
+  }
+  document.getElementById('f-qty').value = automaticQuantity;
+
+  // ── 1. Master Sheet Pipeline Query ──
   if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-    dbg('⚠ GAS_URL set nahi — Master skip');
-    setLB('⚠️','GAS URL set nahi — sirf online search hoga','warn','NO GAS');
+    dbg('⚠ GAS URL not set — Skipping master lookups');
+    setLB('⚠️','GAS URL missing — falling back to online global APIs','warn','NO GAS');
   } else {
-    dbg('Master lookup start: "' + barcode + '"');
+    dbg('Querying database engine array for barcode match: "' + barcode + '"');
     try {
       const r = await gasGet({ action:'lookupBarcode', barcode: barcode });
-      dbg('Master response: ' + JSON.stringify(r).substring(0,200));
+      dbg('Master Engine Data: ' + JSON.stringify(r).substring(0,200));
 
       if (r && r.found === true) {
-        // ✅ FOUND — directly fill karo
         const name = r.productName     || '';
         const cat  = r.productCategory || '';
         const vend = r.vendorName      || '';
 
-        dbg('Found! name="' + name + '" cat="' + cat + '" vendor="' + vend + '"');
-
         document.getElementById('f-name').value = name;
         document.getElementById('f-cat').value  = cat;
 
-        // Vendor dropdown match
         if (vend) {
           const sel = document.getElementById('f-vendor');
           for (const o of sel.options) {
@@ -564,36 +558,32 @@ async function doSearchCode(barcode) {
           }
         }
 
-        // Opacity reset — form fields visible karo
         ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id => {
           document.getElementById(id).style.opacity = '1';
         });
 
         calcAmt();
-        setLB('✅', '✅ Master Sheet mein mila: ' + name, 'ok', 'MASTER');
+        setLB('✅', 'Found in Master: ' + name, 'ok', 'MASTER');
         isNew = false;
-        toast('✅ ' + name + ' — Master Sheet se autofill!', 'success');
+        toast('✅ ' + name + ' — Auto-filled from Master Sheet!', 'success');
+        
+        triggerQuantityPromptAndLoop();
         return;
-
-      } else {
-        dbg('Not found in Master. found=' + (r && r.found) + (r && r.error ? ' err='+r.error : ''));
       }
     } catch(e) {
-      dbg('Master FAIL: ' + e.message);
-      setLB('❌', 'Master error: ' + e.message, 'warn', 'GAS ERR');
+      dbg('Master Query Fault: ' + e.message);
+      setLB('❌', 'Master Exception: ' + e.message, 'warn', 'GAS ERR');
     }
   }
 
-  // ── 2. Open Food Facts ───────────────────────────
-  setLB('📡','Open Food Facts search kar raha hoon…','warn','');
-  dbg('Trying Open Food Facts…');
+  // ── 2. Open Food Facts Third-Party Engine Fallback ──
+  setLB('📡','Querying Open Food Facts global API network…','warn','');
   try {
     const r = await fetch(
       `https://world.openfoodfacts.org/api/v2/product/${barcode}?fields=product_name,product_name_en,categories_tags,brands`,
       { signal: AbortSignal.timeout(7000) }
     );
     const d = await r.json();
-    dbg('OFacts status=' + d.status);
     if (d.status === 1 && d.product) {
       const p    = d.product;
       const name = p.product_name || p.product_name_en || p.brands || '';
@@ -601,51 +591,71 @@ async function doSearchCode(barcode) {
       if (name) {
         document.getElementById('f-name').value = name;
         document.getElementById('f-cat').value  = cat;
-        ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
-          document.getElementById(id).style.opacity = '1');
+        ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id => document.getElementById(id).style.opacity = '1');
         calcAmt();
         setLB('✅', 'Open Food Facts: ' + name, 'ok', 'OFacts');
         isNew = true;
-        toast('📡 "' + name + '" — online se fetch!', 'success');
+        toast('📡 "' + name + '" — Fetched from global database!', 'success');
+        
+        triggerQuantityPromptAndLoop();
         return;
       }
     }
-  } catch(e) { dbg('OFacts fail: ' + e.message); }
+  } catch(e) { dbg('Open Food Facts unresolvable connection: ' + e.message); }
 
-  // ── 3. UPC Item DB ───────────────────────────────
-  setLB('🔄','UPC Item DB check kar raha hoon…','warn','');
-  dbg('Trying UPC Item DB…');
+  // ── 3. UPC Item DB Fallback Network ──
+  setLB('🔄','Querying secondary structural UPC Item Database logs…','warn','');
   try {
     const r = await fetch(
       `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`,
       { signal: AbortSignal.timeout(5000) }
     );
     const d = await r.json();
-    dbg('UPC DB code=' + d.code);
     if (d.code === 'OK' && d.items?.length) {
       const item = d.items[0];
       if (item.title) {
         document.getElementById('f-name').value = item.title;
         document.getElementById('f-cat').value  = item.category || '';
-        ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
-          document.getElementById(id).style.opacity = '1');
+        ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id => document.getElementById(id).style.opacity = '1');
         calcAmt();
-        setLB('✅', 'UPC DB: ' + item.title, 'ok', 'UPC-DB');
+        setLB('✅', 'UPC Database Match: ' + item.title, 'ok', 'UPC-DB');
         isNew = true;
-        toast('🔄 "' + item.title + '" — UPC database se!', 'success');
+        toast('🔄 "' + item.title + '" — Resolved from UPC Registry!', 'success');
+        
+        triggerQuantityPromptAndLoop();
         return;
       }
     }
-  } catch(e) { dbg('UPC DB fail: ' + e.message); }
+  } catch(e) { dbg('UPC Registry matching failure: ' + e.message); }
 
-  // ── Kuch nahi mila ────────────────────────────────
-  dbg('Nothing found for: ' + barcode);
-  ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
-    document.getElementById(id).style.opacity = '1');
-  setLB('⚠️', 'Koi database mein nahi mila — manually bharo', 'warn', 'NEW');
+  // ── 4. Unresolved Barcode Setup ──
+  dbg('No match identified across registries for item: ' + barcode);
+  ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id => document.getElementById(id).style.opacity = '1');
+  setLB('⚠️', 'New product signature identified — please input fields manually', 'warn', 'NEW');
   isNew = true;
-  toast('⚠ Barcode nahi mila — naam khud likho', 'warn');
+  toast('⚠ Barcode unresolvable — assign description fields manually', 'warn');
   document.getElementById('f-name').focus();
+}
+
+// Prompt for quantity, add to queue, and restart camera immediately
+function triggerQuantityPromptAndLoop() {
+  setTimeout(() => {
+    const currentQtyValue = document.getElementById('f-qty').value;
+    const userConfirmedQty = window.prompt("Verify Operational Transaction Quantity:", currentQtyValue);
+    
+    if (userConfirmedQty !== null) {
+      const sanitizedNumber = parseFloat(userConfirmedQty);
+      if (!isNaN(sanitizedNumber) && sanitizedNumber > 0) {
+        document.getElementById('f-qty').value = sanitizedNumber;
+        calcAmt();
+        addToQueue();
+      } else {
+        toast("Invalid quantity bypassed. Form data preserved for review.", "warn");
+      }
+    }
+    // Re-trigger camera scanning workflow for automated continuous entry processing
+    startCam();
+  }, 350);
 }
 
 function cleanTag(tags) {
@@ -664,38 +674,95 @@ function setLB(icon, msg, type, badge) {
   b.className   = badge ? `badge b-${type === 'ok' ? 'ok' : type === 'warn' ? 'warn' : 'neutral'}` : '';
 }
 
-function fillForm(name, cat, vendor) {
-  document.getElementById('f-name').value = name;
-  document.getElementById('f-cat').value  = cat;
-  if (vendor) {
-    const sel = document.getElementById('f-vendor');
-    for (const o of sel.options) {
-      if (o.value.toLowerCase().includes(vendor.toLowerCase())) { sel.value = o.value; break; }
-    }
-  }
-  calcAmt();
-}
-
-function setBusy(b) {
-  ['f-name','f-cat','f-rate','f-qty','f-vendor'].forEach(id =>
-    document.getElementById(id).style.opacity = b ? '.4' : '1'
-  );
-}
-
 // ═══════════════════════════════════════════════════
-//  FORM
+//  STAGING QUEUE MANAGEMENT & TRANSACTION HANDLERS
 // ═══════════════════════════════════════════════════
 function setTx(t) {
   txType = t;
   document.getElementById('btn-in').className  = t === 'in'  ? 'sel-in' : '';
   document.getElementById('btn-out').className = t === 'out' ? 'sel-out': '';
-  calcAmt();
+  recalculateTotalBatchValue();
 }
+
 function calcAmt() {
-  const r = parseFloat(document.getElementById('f-rate').value)||0;
-  const q = parseFloat(document.getElementById('f-qty').value)||0;
-  document.getElementById('net-amt').textContent = '₹ '+(r*q).toFixed(2);
+  recalculateTotalBatchValue();
 }
+
+// Pushes current individual state into batch arrays
+function addToQueue() {
+  const bc   = document.getElementById('disp-bc').textContent.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const cat  = document.getElementById('f-cat').value.trim();
+  const vend = document.getElementById('f-vendor').value.trim();
+  const rate = parseFloat(document.getElementById('f-rate').value) || 0;
+  const qty  = parseFloat(document.getElementById('f-qty').value) || 0;
+
+  if (!bc || bc === '—') return toast('Identify valid product data signatures first','warn');
+  if (!name)             return toast('Description parameter: Product Name required','warn');
+  if (qty <= 0)          return toast('Quantity parameter must exceed base unit value 0','warn');
+
+  // Push record into historical queue element
+  transactionQueue.push({
+    barcode: bc,
+    product: name,
+    category: cat,
+    vendor: vend,
+    rate: rate,
+    qty: qty,
+    type: txType === 'in' ? 'Production' : 'Dispatch'
+  });
+
+  toast(`Added matching system item signature: "${name}" to staging list.`, 'success');
+  
+  // Wipe localized search tracking values while locking target batch records
+  document.getElementById('disp-bc').textContent = '—';
+  document.getElementById('inp-bc').value = '';
+  ['f-name','f-cat','f-rate'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-qty').value = 1;
+  document.getElementById('lookup-bar').style.display = 'none';
+  
+  updateQueueUI();
+}
+
+function updateQueueUI() {
+  document.getElementById('queue-count').textContent = transactionQueue.length;
+  const elementContainer = document.getElementById('queue-preview-list');
+  
+  if (transactionQueue.length === 0) {
+    elementContainer.innerHTML = `<div style="font-size:.7rem;color:var(--muted);text-align:center;padding:.5rem;">Queue is empty</div>`;
+  } else {
+    elementContainer.innerHTML = transactionQueue.map((item, index) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.72rem;border-bottom:1px solid var(--border);padding:.25rem 0;">
+        <span style="color:${item.type==='Production'?'var(--success)':'var(--danger)'};font-weight:bold;">${item.type==='Production'?'[P]':'[D]'}</span>
+        <span style="flex:1;margin-left:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.product}</span>
+        <span style="font-family:'Space Mono',monospace;color:var(--accent);margin-left:.2rem;">x${item.qty}</span>
+        <button onclick="removeItemFromQueue(${index})" style="background:none;border:none;color:var(--danger);cursor:pointer;margin-left:.4rem;padding:0 .15rem;">✕</button>
+      </div>
+    `).join('');
+  }
+  recalculateTotalBatchValue();
+}
+
+function removeItemFromQueue(index) {
+  transactionQueue.splice(index, 1);
+  updateQueueUI();
+}
+
+function recalculateTotalBatchValue() {
+  let combinedBatchValue = 0;
+  // Compute across active items inside staging queues
+  transactionQueue.forEach(item => {
+    combinedBatchValue += (item.rate * item.qty);
+  });
+  
+  // Compute local form fields values simultaneously
+  const localRate = parseFloat(document.getElementById('f-rate').value) || 0;
+  const localQty  = parseFloat(document.getElementById('f-qty').value) || 0;
+  combinedBatchValue += (localRate * localQty);
+
+  document.getElementById('net-amt').textContent = '₹ ' + combinedBatchValue.toFixed(2);
+}
+
 function clearForm() {
   document.getElementById('disp-bc').textContent = '—';
   document.getElementById('inp-bc').value = '';
@@ -703,52 +770,53 @@ function clearForm() {
   document.getElementById('f-qty').value = 1;
   document.getElementById('f-vendor').selectedIndex = 0;
   document.getElementById('lookup-bar').style.display = 'none';
-  document.getElementById('net-amt').textContent = '₹ 0.00';
-  isNew = false; calcAmt();
+  transactionQueue = [];
+  updateQueueUI();
 }
 
+// Confirms batch transaction queues down to sheet database arrays
 async function saveTx() {
-  const bc   = document.getElementById('disp-bc').textContent.trim();
-  const name = document.getElementById('f-name').value.trim();
-  const cat  = document.getElementById('f-cat').value.trim();
-  const vend = document.getElementById('f-vendor').value.trim();
-  const rate = parseFloat(document.getElementById('f-rate').value)||0;
-  const qty  = parseInt(document.getElementById('f-qty').value)||0;
+  // Push localized form properties into active queue structures if populated
+  const activeBc = document.getElementById('disp-bc').textContent.trim();
+  if (activeBc && activeBc !== '—') {
+    addToQueue();
+  }
 
-  if (!bc || bc === '—') return toast('Pehle barcode scan ya enter karo','warn');
-  if (!name)             return toast('Product Name required hai','warn');
-  if (qty < 1)           return toast('Quantity 1 se kam nahi ho sakti','warn');
+  if (!transactionQueue.length) return toast('Staging processing targets empty — scan products first','warn');
 
   if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-    return toast('⚠ GAS URL abhi set nahi hai — Code.gs deploy karo aur URL dalo','warn');
+    return toast('⚠ Target endpoint execution path missing — Deploy Code.gs and update GAS_URL','warn');
   }
 
   const btn = document.getElementById('save-btn');
   const lbl = document.getElementById('save-lbl');
   btn.disabled = true;
-  lbl.innerHTML = '<span class="loader" style="width:12px;height:12px;border-width:1.5px;"></span> Saving…';
+  lbl.innerHTML = '<span class="loader" style="width:12px;height:12px;border-width:1.5px;"></span> Committing Batch Upload…';
 
   try {
     const res = await gasPost({
-      action:'saveTransaction', barcode:bc, productName:name, productCategory:cat,
-      vendorName:vend, rate, quantity:qty,
-      transactionType: txType === 'in' ? 'Stock In' : 'Stock Out', isNew
+      action: 'saveBatchTransactions',
+      transactions: transactionQueue
     });
+    
     if (res.success) {
-      toast(res.message || 'Transaction save ho gaya!','success');
-      clearForm(); loadInv();
+      toast(res.message || 'Batch transaction payload successfully committed down to sheet databases!','success');
+      transactionQueue = [];
+      updateQueueUI();
+      clearForm(); 
+      loadInv();
     } else {
-      toast(res.error || 'Save nahi hua','error');
+      toast(res.error || 'Server validation exception encountered','error');
     }
   } catch(e) {
-    toast('Save error: ' + e.message,'error');
+    toast('Critical integration execution fault: ' + e.message,'error');
   } finally {
     btn.disabled = false; lbl.textContent = '💾 Save Transaction';
   }
 }
 
 // ═══════════════════════════════════════════════════
-//  VENDORS & INVENTORY
+//  VENDORS & STOCK LOGS INVENTORY HANDLERS
 // ═══════════════════════════════════════════════════
 async function loadVendors() {
   if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') return;
@@ -761,14 +829,14 @@ async function loadVendors() {
       o.value = o.textContent = v;
       sel.appendChild(o);
     });
-  } catch(e) { console.warn('Vendors:', e.message); }
+  } catch(e) { console.warn('Vendor record arrays loading warning:', e.message); }
 }
 
 async function loadInv() {
   const tb = document.getElementById('inv-body');
   tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem"><span class="loader"></span></td></tr>';
   if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--warn);">⚠ GAS URL set karo</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--warn);">⚠ GAS URL placeholder active</td></tr>';
     return;
   }
   try {
@@ -781,7 +849,7 @@ async function loadInv() {
       <div class="stat-card"><div class="sv">${tot}</div><div class="sl2">Total Units</div></div>
       <div class="stat-card"><div class="sv" style="color:var(--danger)">${low}</div><div class="sl2">Low Stock</div></div>`;
     if (!rows.length) {
-      tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--muted);">Inventory empty — transaction karo</td></tr>';
+      tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--muted);">Inventory logs empty — commit initial operations first</td></tr>';
       return;
     }
     tb.innerHTML = rows.map(r => {
@@ -798,12 +866,12 @@ async function loadInv() {
       </tr>`;
     }).join('');
   } catch(e) {
-    tb.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--danger);">Error: ${e.message}</td></tr>`;
+    tb.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--danger);">Error parsing data array parameters: ${e.message}</td></tr>`;
   }
 }
 
 // ═══════════════════════════════════════════════════
-//  FILE UPLOAD
+//  BULK SALES FILE DROP EXCEL / CSV PARSERS
 // ═══════════════════════════════════════════════════
 const DZ = document.getElementById('drop-zone');
 DZ.addEventListener('dragover',  e=>{e.preventDefault();DZ.classList.add('over');});
@@ -824,7 +892,7 @@ function clearFile() {
 async function handleFile(file) {
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
-  if (!['xlsx','xls','csv'].includes(ext)) return toast('Sirf Excel ya CSV allowed hai','warn');
+  if (!['xlsx','xls','csv'].includes(ext)) return toast('File validation restriction: Excel or CSV extensions strictly required','warn');
   const fi = document.getElementById('file-info');
   fi.style.display = 'flex';
   document.getElementById('file-nm').textContent = file.name;
@@ -841,8 +909,8 @@ async function handleFile(file) {
     const wb  = XLSX.read(buf,{type:'array',cellDates:true});
     const ws  = wb.Sheets[wb.SheetNames[0]];
     const raw = XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:true});
-    ln(`📋 Total rows: <b>${raw.length}</b>`);
-    ln(`⏭ Pehle 6 rows skip (metadata)…`);
+    ln(`📋 Raw parsed document length metrics: <b>${raw.length} rows</b>`);
+    ln(`Skip structural system metadata lines (Skip 6 rows)…`);
     const dRows = raw.slice(6);
     const hdr   = dRows[0];
     const colMap = {};
@@ -850,7 +918,7 @@ async function handleFile(file) {
       const i = hdr.findIndex(h => String(h).trim().toLowerCase() === c.toLowerCase());
       if (i!==-1) colMap[c]=i;
     });
-    ln(`✓ Matched: <b>${Object.keys(colMap).join(', ')||'none'}</b>`);
+    ln(`✓ Validated mapped column attributes: <b>${Object.keys(colMap).join(', ')||'none'}</b>`);
     let skip=0,dfx=0;
     cleanRows=[];
     dRows.slice(1).forEach(row => {
@@ -870,12 +938,12 @@ async function handleFile(file) {
       });
       cleanRows.push(obj);
     });
-    ln(`✅ Clean rows: <b>${cleanRows.length}</b> | Skipped: <b>${skip}</b> | Dates fixed: <b>${dfx}</b>`);
+    ln(`✅ Purged output elements: <b>${cleanRows.length} rows</b> | Skipped rows: <b>${skip}</b> | Date formatting fixes: <b>${dfx}</b>`);
     document.getElementById('parse-card').style.display='none';
     renderPreview();
   } catch(e) {
     document.getElementById('parse-card').style.display='none';
-    toast('Parse error: '+e.message,'error');
+    toast('File structural content resolution warning: '+e.message,'error');
   }
 }
 
@@ -898,24 +966,24 @@ function renderPreview() {
 }
 
 async function confirmUpload() {
-  if (!cleanRows.length) return toast('Upload karne ke liye data nahi hai','warn');
-  if (!GAS_URL||GAS_URL==='YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') return toast('GAS URL set karo pehle','warn');
+  if (!cleanRows.length) return toast('Processing dataset targets are currently unassigned','warn');
+  if (!GAS_URL||GAS_URL==='YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') return toast('Target processing macro execution sequence configuration invalid','warn');
   const btn=document.getElementById('confirm-btn');
-  btn.disabled=true; btn.innerHTML='<span class="loader" style="width:12px;height:12px;border-width:1.5px;"></span> Uploading…';
+  btn.disabled=true; btn.innerHTML='<span class="loader" style="width:12px;height:12px;border-width:1.5px;"></span> Syncing records down to cloud databases…';
   try {
     const r=await gasPost({action:'saveSales',rows:cleanRows});
     if(r.success){
-      toast(r.message||'Sales saved!','success');
+      toast(r.message||'Sales records archived successfully!','success');
       upHist.unshift({time:new Date().toLocaleTimeString('en-IN'),rows:cleanRows.length,file:document.getElementById('file-nm').textContent});
       renderHist(); clearFile();
-    } else toast(r.error||'Upload failed','error');
-  } catch(e){ toast('Upload error: '+e.message,'error'); }
+    } else toast(r.error||'Cloud append rejection signature returned','error');
+  } catch(e){ toast('Integration endpoint parsing pipeline failure: '+e.message,'error'); }
   finally{ btn.disabled=false; btn.innerHTML='✅ Confirm Upload'; }
 }
 
 function renderHist() {
   const el=document.getElementById('upload-hist');
-  if(!upHist.length){el.innerHTML='Koi upload nahi abhi tak';return;}
+  if(!upHist.length){el.innerHTML='No historical uploads recorded in this session';return;}
   el.innerHTML=`<table class="dtable"><thead><tr><th>Time</th><th>File</th><th>Rows</th><th>Status</th></tr></thead><tbody>
     ${upHist.map(h=>`<tr>
       <td style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted);">${h.time}</td>
@@ -925,36 +993,27 @@ function renderHist() {
 }
 
 // ═══════════════════════════════════════════════════
-//  GAS API HELPERS
-//  GAS Web App ek redirect deta hai — fetch ka
-//  default 'follow' us redirect ko handle karta hai.
-//  Lekin kuch browsers mein CORS + redirect issue
-//  aata hai — isliye hum no-cors fallback bhi rakhte hain.
+//  GOOGLE APPS SCRIPT ASYNCHRONOUS CONNECTIONS
 // ═══════════════════════════════════════════════════
 async function gasGet(params) {
   const url = new URL(GAS_URL);
   Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
   const urlStr = url.toString();
-
   dbg('GET → ' + urlStr.substring(0, 80) + '…');
-
-  // Try 1: Normal fetch with redirect follow
   try {
     const r = await fetch(urlStr, { method:'GET', redirect:'follow' });
     const text = await r.text();
     dbg('GET response (' + r.status + '): ' + text.substring(0, 120));
-    const parsed = JSON.parse(text);
-    return parsed;
+    return JSON.parse(text);
   } catch(e) {
-    dbg('GET error: ' + e.message);
+    dbg('GET integration execution failure exception: ' + e.message);
     throw e;
   }
 }
 
 async function gasPost(data) {
-  dbg('POST action: ' + data.action);
+  dbg('POST action route request initialization: ' + data.action);
   try {
-    // text/plain → CORS preflight nahi hoti, GAS directly accept karta hai
     const r = await fetch(GAS_URL, {
       method:  'POST',
       redirect:'follow',
@@ -962,15 +1021,15 @@ async function gasPost(data) {
       body:    JSON.stringify(data)
     });
     const text = await r.text();
-    dbg('POST response (' + r.status + '): ' + text.substring(0, 120));
+    dbg('POST execution feedback code (' + r.status + '): ' + text.substring(0, 120));
     return JSON.parse(text);
   } catch(e) {
-    dbg('POST error: ' + e.message);
+    dbg('POST integration execution failure exception: ' + e.message);
     throw e;
   }
 }
 
-// ─── Debug logger — screen pe dikhta hai ────────
+// --- Debug trace tracking configurations ---
 const _dbgLogs = [];
 function dbg(msg) {
   const t = new Date().toLocaleTimeString('en-IN');
@@ -983,17 +1042,15 @@ function dbg(msg) {
   console.log('[ShopOS]', msg);
 }
 
-// ─── Debug panel toggle ──────────────────────────
 function toggleDebug() {
   const p = document.getElementById('debug-panel');
   p.style.display = p.style.display === 'none' ? 'block' : 'none';
   if (p.style.display === 'block') {
-    dbg('=== Debug Panel Opened ===');
-    dbg('GAS_URL = ' + (GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE' ? '❌ NOT SET' : '✅ ' + GAS_URL.substring(0,60)+'…'));
+    dbg('=== Trace Monitor Framework Activated ===');
+    dbg('GAS_URL Configuration Verification: ' + (GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE' ? '❌ PLACEHOLDER ALERT' : '✅ ASSIGNED: ' + GAS_URL.substring(0,60)+'…'));
   }
 }
 
-// ─── Direct Master lookup test ───────────────────
 async function testMasterLookup() {
   const bc = document.getElementById('debug-bc').value.trim()
           || document.getElementById('inp-bc').value.trim()
@@ -1001,28 +1058,27 @@ async function testMasterLookup() {
   document.getElementById('debug-bc').value = bc;
 
   if (!GAS_URL || GAS_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-    dbg('❌ GAS_URL set nahi hai');
-    toast('GAS URL set karo pehle','error');
+    dbg('❌ Master query trace execution aborted: Endpoint URL configuration property is invalid');
+    toast('GAS URL configuration required','error');
     return;
   }
 
-  dbg('=== MANUAL TEST: barcode=' + bc + ' ===');
+  dbg('=== INITIATING DIRECT BACKEND LOOKUP DIAGNOSTIC FOR: barcode=' + bc + ' ===');
   try {
     const r = await gasGet({ action:'lookupBarcode', barcode: bc });
-    dbg('RESULT: ' + JSON.stringify(r));
+    dbg('Diagnostic result payload: ' + JSON.stringify(r));
     if (r.found) {
-      toast(`✅ Found: ${r.productName} | ${r.productCategory}`, 'success');
+      toast(`✅ Identifier Located: ${r.productName} | ${r.productCategory}`, 'success');
     } else if (r.error) {
-      toast('GAS Error: ' + r.error, 'error');
+      toast('Execution platform warning: ' + r.error, 'error');
     } else {
-      toast(`Barcode "${bc}" Master mein nahi hai (found=false)`, 'warn');
+      toast(`Barcode sequence "${bc}" unrecorded across product indices (found=false)`, 'warn');
     }
   } catch(e) {
-    dbg('TEST FAILED: ' + e.message);
-    toast('Test failed: ' + e.message, 'error');
+    dbg('System verification pipeline fault: ' + e.message);
+    toast('Diagnostic script exception: ' + e.message, 'error');
   }
 }
-
 
 function toast(msg, type='info') {
   const c=document.getElementById('toast');
